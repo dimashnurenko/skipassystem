@@ -70,6 +70,9 @@ public interface SkiPass {
     }
 
     enum LimitType {
-        TIME_LIMIT, LIFTS_LIMIT
+        /**Ski pass activity depends on time. For example HALF_DAY_MORNING ski pass see {@link Type}*/
+        TIME_LIMIT,
+        /**Ski pass activity depends on count of lifts. For example TEN_LIFTS ski pass see {@link Type}*/
+        LIFTS_LIMIT
     }
 }
