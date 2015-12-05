@@ -1,0 +1,43 @@
+# Binaries
+#########################
+*.7z
+*.dmg
+*.gz
+*.iso
+*.rar
+*.tar
+*.zip
+*.war
+*.ear
+*.sar
+
+# Maven
+#########################
+target/
+
+# IntelliJ project files
+#########################
+*.iml
+*.iws
+*.ipr
+.idea/
+
+# Eclipse project file
+#########################
+.settings/
+.classpath
+.project
+
+# OS generated files #
+#########################
+.DS_Store
+.directory
+ehthumbs.db
+Icon?
+Thumbs.db
+*/overlays
+*~
+
+# Misc
+#########################
+*.swp
