@@ -1,19 +1,23 @@
 package dmitry.shnurenko.turnslite;
 
-import dmitry.shnurenko.skipass.SkiPass;
-import dmitry.shnurenko.skipass.SkiPass.LimitType;
+import com.google.common.collect.ImmutableMap;
+import dmitry.shnurenko.skipass.LiftsLimitSkiPass;
+import dmitry.shnurenko.skipass.TimeLimitSkiPass;
+import dmitry.shnurenko.skipass.type.ScannerType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import static dmitry.shnurenko.skipass.SkiPass.LimitType.LIFTS_LIMIT;
-import static dmitry.shnurenko.skipass.SkiPass.LimitType.TIME_LIMIT;
-import static java.time.LocalDateTime.now;
+import static dmitry.shnurenko.skipass.type.LiftsLimitType.TEN_LIFTS;
+import static dmitry.shnurenko.skipass.type.ScannerType.LIFTS_SCANNER;
+import static dmitry.shnurenko.skipass.type.ScannerType.TIME_SCANNER;
+import static dmitry.shnurenko.skipass.type.TimeLimitType.HALF_DAY_MORNING;
+import static dmitry.shnurenko.turnslite.Turnslite.ScanStatus.FAIL;
+import static dmitry.shnurenko.turnslite.Turnslite.ScanStatus.SUCCESS;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,62 +28,69 @@ import static org.mockito.Mockito.when;
 public class TurnsliteImplTest {
 
     @Mock
-    private SkiPassScanListener listener;
+    private SkiPassScanListener               listener;
     @Mock
-    private SkiPass             skiPass;
+    private TimeLimitSkiPass                  timeLimitSkiPass;
+    @Mock
+    private LiftsLimitSkiPass                 liftsLimitSkiPass;
+    @Mock
+    private SkiPassScanner<TimeLimitSkiPass>  timeLimitScanner;
+    @Mock
+    private SkiPassScanner<LiftsLimitSkiPass> liftLimitScanner;
 
     private TurnsliteImpl turnslite;
 
     @Before
     public void setUp() {
-        Map<LimitType, SkiPassChecker> checkers = new HashMap<>();
-        checkers.put(LIFTS_LIMIT, new LiftLimitChecker());
-        checkers.put(TIME_LIMIT, new TimeLimitChecker());
+        Map<ScannerType, SkiPassScanner> scanners = ImmutableMap.of(TIME_SCANNER, timeLimitScanner,
+                                                                    LIFTS_SCANNER, liftLimitScanner);
 
-        turnslite = new TurnsliteImpl(checkers);
-
+        turnslite = new TurnsliteImpl(scanners);
         turnslite.addScanListener(listener);
     }
 
     @Test
     public void liftLimitSkiPassScanShouldBeSuccess() {
-        when(skiPass.getLimitType()).thenReturn(LIFTS_LIMIT);
-        when(skiPass.getLiftCounts()).thenReturn(2);
+        when(timeLimitSkiPass.getType()).thenReturn(HALF_DAY_MORNING);
+        when(timeLimitSkiPass.getScannerType()).thenReturn(LIFTS_SCANNER);
+        when(timeLimitScanner.scan(timeLimitSkiPass)).thenReturn(SUCCESS);
 
-        turnslite.scan(skiPass);
+        turnslite.scan(timeLimitSkiPass);
 
-        verify(listener).onSkiPassScanSuccess(skiPass);
+        verify(timeLimitScanner).scan(timeLimitSkiPass);
+        verify(listener).onSkiPassScanSuccess(timeLimitSkiPass);
     }
 
     @Test
     public void liftLimitSkiPassScanShouldBeFail() {
-        when(skiPass.getLimitType()).thenReturn(LIFTS_LIMIT);
-        when(skiPass.getLiftCounts()).thenReturn(-1);
+        when(liftsLimitSkiPass.getType()).thenReturn(TEN_LIFTS);
+        when(liftsLimitSkiPass.getScannerType()).thenReturn(LIFTS_SCANNER);
+        when(liftLimitScanner.scan(liftsLimitSkiPass)).thenReturn(FAIL);
 
-        turnslite.scan(skiPass);
+        turnslite.scan(liftsLimitSkiPass);
 
-        verify(listener).onSkiPassScanFail(skiPass);
+        verify(listener).onSkiPassScanFail(liftsLimitSkiPass);
     }
 
     @Test
     public void timeLimitSkiPassScanShouldBeSuccess() {
-        when(skiPass.getLimitType()).thenReturn(TIME_LIMIT);
-        when(skiPass.getStartActiveTime()).thenReturn(now().minusHours(1));
-        when(skiPass.getEndActiveTime()).thenReturn(now().plusHours(1));
+        when(timeLimitSkiPass.getType()).thenReturn(HALF_DAY_MORNING);
+        when(timeLimitSkiPass.getScannerType()).thenReturn(TIME_SCANNER);
+        when(timeLimitScanner.scan(timeLimitSkiPass)).thenReturn(SUCCESS);
 
-        turnslite.scan(skiPass);
+        turnslite.scan(timeLimitSkiPass);
 
-        verify(listener).onSkiPassScanSuccess(skiPass);
+        verify(listener).onSkiPassScanSuccess(timeLimitSkiPass);
     }
 
     @Test
     public void timeLimitSkiPassScanShouldBeFail() {
-        when(skiPass.getLimitType()).thenReturn(TIME_LIMIT);
-        when(skiPass.getStartActiveTime()).thenReturn(now().plusHours(1));
-        when(skiPass.getEndActiveTime()).thenReturn(now().plusHours(2));
+        when(timeLimitSkiPass.getType()).thenReturn(HALF_DAY_MORNING);
+        when(timeLimitSkiPass.getScannerType()).thenReturn(TIME_SCANNER);
+        when(timeLimitScanner.scan(timeLimitSkiPass)).thenReturn(FAIL);
 
-        turnslite.scan(skiPass);
+        turnslite.scan(timeLimitSkiPass);
 
-        verify(listener).onSkiPassScanFail(skiPass);
+        verify(listener).onSkiPassScanFail(timeLimitSkiPass);
     }
 }

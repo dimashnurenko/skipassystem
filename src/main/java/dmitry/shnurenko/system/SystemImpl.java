@@ -2,10 +2,11 @@ package dmitry.shnurenko.system;
 
 import com.google.inject.Singleton;
 import dmitry.shnurenko.skipass.SkiPass;
-import dmitry.shnurenko.skipass.SkiPass.Type;
+import dmitry.shnurenko.skipass.type.Type;
 import dmitry.shnurenko.turnslite.SkiPassScanListener;
 import dmitry.shnurenko.turnslite.Turnslite;
 
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
+import static dmitry.shnurenko.skipass.SkiPassCreator.create;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -22,7 +24,6 @@ import static java.util.stream.Collectors.toList;
 @Singleton
 final class SystemImpl implements System, SkiPassScanListener {
 
-    private final SkiPassCreator              skiPassCreator;
     private final Turnslite                   turnslite;
     private final Map<LocalDateTime, SkiPass> successPassages;
     private final Map<LocalDateTime, SkiPass> failPassages;
@@ -30,10 +31,9 @@ final class SystemImpl implements System, SkiPassScanListener {
     private final List<SkiPass>               createdSkiPasses;
 
     @Inject
-    public SystemImpl(Turnslite turnslite, SkiPassCreator skiPassCreator) {
+    public SystemImpl(Turnslite turnslite) {
         turnslite.addScanListener(this);
 
-        this.skiPassCreator = skiPassCreator;
         this.turnslite = turnslite;
         this.successPassages = new HashMap<>();
         this.failPassages = new HashMap<>();
@@ -41,32 +41,31 @@ final class SystemImpl implements System, SkiPassScanListener {
         this.createdSkiPasses = new ArrayList<>();
     }
 
-    /** {inheritDoc} */
+    @Nonnull
     @Override
     public SkiPass createSkiPass(Type type) {
-        SkiPass skiPass = skiPassCreator.create(type);
+        SkiPass skiPass = create(type);
 
         createdSkiPasses.add(skiPass);
 
         return skiPass;
     }
 
-    /** {inheritDoc} */
     @Override
     public void blockSkiPass(SkiPass skiPass) {
         blockedSkiPasses.add(skiPass);
     }
 
-    /** {inheritDoc} */
+    @Nonnull
     @Override
-    public List<SkiPass> getSuccessPassagesForPeriod(LocalDateTime from, LocalDateTime until, Type type) {
-        return getPassagesForPeriod(successPassages, from, until, type);
+    public List<SkiPass> findSuccessPassagesForPeriod(LocalDateTime from, LocalDateTime until, Type type) {
+        return findPassagesForPeriod(successPassages, from, until, type);
     }
 
-    private List<SkiPass> getPassagesForPeriod(Map<LocalDateTime, SkiPass> passagesMap,
-                                               LocalDateTime from,
-                                               LocalDateTime until,
-                                               Type type) {
+    private List<SkiPass> findPassagesForPeriod(Map<LocalDateTime, SkiPass> passagesMap,
+                                                LocalDateTime from,
+                                                LocalDateTime until,
+                                                Type type) {
         Predicate<LocalDateTime> mapToPeriod = date -> date.isAfter(from) && date.isBefore(until);
 
         List<LocalDateTime> localDateTimes = passagesMap.keySet().stream().filter(mapToPeriod).collect(toList());
@@ -78,17 +77,17 @@ final class SystemImpl implements System, SkiPassScanListener {
                           .collect(toList());
     }
 
-    /** {inheritDoc} */
+    @Nonnull
     @Override
-    public List<SkiPass> getFailPassagesForPeriod(LocalDateTime from, LocalDateTime until, Type type) {
-        return getPassagesForPeriod(failPassages, from, until, type);
+    public List<SkiPass> findFailPassagesForPeriod(LocalDateTime from, LocalDateTime until, Type type) {
+        return findPassagesForPeriod(failPassages, from, until, type);
     }
 
-    /** {inheritDoc} */
+    @Nonnull
     @Override
-    public List<SkiPass> getCreatedPassesForPeriod(LocalDateTime from, LocalDateTime until) {
+    public List<SkiPass> findCreatedPassesForPeriod(LocalDateTime from, LocalDateTime until) {
         Predicate<SkiPass> createdInPeriodPredicate = skiPass -> {
-            LocalDateTime createdDate = skiPass.getCreationDate();
+            LocalDateTime createdDate = skiPass.getCreationTime();
 
             return createdDate.isAfter(from) && createdDate.isBefore(until);
         };
@@ -98,7 +97,6 @@ final class SystemImpl implements System, SkiPassScanListener {
                                .collect(toList());
     }
 
-    /** {inheritDoc} */
     @Override
     public void onSkiPassScanSuccess(SkiPass skiPass) {
         if (blockedSkiPasses.contains(skiPass)) {
@@ -110,7 +108,6 @@ final class SystemImpl implements System, SkiPassScanListener {
         turnslite.turnGreenLight();
     }
 
-    /** {inheritDoc} */
     @Override
     public void onSkiPassScanFail(SkiPass skiPass) {
         failPassages.put(LocalDateTime.now(), skiPass);

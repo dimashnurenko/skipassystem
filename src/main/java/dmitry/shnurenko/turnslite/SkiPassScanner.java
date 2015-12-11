@@ -1,6 +1,9 @@
 package dmitry.shnurenko.turnslite;
 
 import dmitry.shnurenko.skipass.SkiPass;
+import dmitry.shnurenko.turnslite.Turnslite.ScanStatus;
+
+import javax.annotation.Nonnull;
 
 /**
  * The special class which provides methods for checking if ski pass is active(passage allowed) or
@@ -8,14 +11,14 @@ import dmitry.shnurenko.skipass.SkiPass;
  *
  * @author Dmitry Shnurenko
  */
-public interface SkiPassChecker {
+public interface SkiPassScanner<T extends SkiPass> {
 
     /**
      * Checks if ski pass is active(passage allowed) or not(passage forbidden)
      *
      * @param skiPass ski pass which will be checked
-     * @return <code>true</code> if ski pass is active(passage allowed), or <code>false</code> if ski pass is not
+     * @return scan status SUCCESS if scan successful and FAIL if scan is failed
      * active(passage forbidden)
      */
-    boolean check(SkiPass skiPass);
+    @Nonnull ScanStatus scan(@Nonnull T skiPass);
 }

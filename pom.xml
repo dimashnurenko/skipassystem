@@ -11,10 +11,10 @@
     <properties>
         <guice.version>4.0</guice.version>
         <guice.assist.inject.version>4.0</guice.assist.inject.version>
-        <google.collections.version>1.0</google.collections.version>
-        <cucumber.version>1.2.4</cucumber.version>
+        <annotation.version>3.0.0</annotation.version>
         <junit.version>4.12</junit.version>
         <mockito.version>1.9.5</mockito.version>
+        <junit.addons.version>1.4</junit.addons.version>
     </properties>
 
     <dependencies>
@@ -33,6 +33,11 @@
             <artifactId>guice-multibindings</artifactId>
             <version>${guice.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${annotation.version}</version>
+        </dependency>
 
         <!--tests-->
         <dependency>
@@ -47,6 +52,13 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>junit-addons</groupId>
+            <artifactId>junit-addons</artifactId>
+            <version>${junit.addons.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>

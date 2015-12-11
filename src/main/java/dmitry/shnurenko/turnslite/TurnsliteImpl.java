@@ -3,14 +3,14 @@ package dmitry.shnurenko.turnslite;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import dmitry.shnurenko.skipass.SkiPass;
-import dmitry.shnurenko.skipass.SkiPass.LimitType;
+import dmitry.shnurenko.skipass.type.ScannerType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static dmitry.shnurenko.turnslite.TurnsliteImpl.ScanStatus.FAIL;
-import static dmitry.shnurenko.turnslite.TurnsliteImpl.ScanStatus.SUCCESS;
+import static dmitry.shnurenko.turnslite.Turnslite.ScanStatus.FAIL;
+import static dmitry.shnurenko.turnslite.Turnslite.ScanStatus.SUCCESS;
 
 /**
  * @author Dmitry Shnurenko
@@ -18,40 +18,41 @@ import static dmitry.shnurenko.turnslite.TurnsliteImpl.ScanStatus.SUCCESS;
 @Singleton
 final class TurnsliteImpl implements Turnslite {
 
-    private final List<SkiPassScanListener>      listeners;
-    private final Map<LimitType, SkiPassChecker> checkers;
+    private final List<SkiPassScanListener>        listeners;
+    private final Map<ScannerType, SkiPassScanner> scanners;
 
     @Inject
-    public TurnsliteImpl(Map<LimitType, SkiPassChecker> checkers) {
+    public TurnsliteImpl(Map<ScannerType, SkiPassScanner> scanners) {
         this.listeners = new ArrayList<>();
-        this.checkers = checkers;
+        this.scanners = scanners;
     }
 
-    /** {inheritDoc} */
     @Override
     public void addScanListener(SkiPassScanListener scanListener) {
         listeners.add(scanListener);
     }
 
-    /** {inheritDoc} */
     @Override
     public void scan(SkiPass skiPass) {
-        LimitType limitType = skiPass.getLimitType();
+        ScannerType scannerType = skiPass.getType().getScannerType();
 
-        SkiPassChecker checker = checkers.get(limitType);
+        SkiPassScanner scanner = scanners.get(scannerType);
 
-        boolean isSkiPassActive = checker.check(skiPass);
+        if (scanner == null) {
+            throw new IllegalArgumentException(
+                    getClass() + "Scanner for scanner type " + scannerType + " is not defined. " +
+                            "Register scanner for " + scannerType + " and try again.");
+        }
 
-        notifyListeners(skiPass, isSkiPassActive ? SUCCESS : FAIL);
+        //noinspection unchecked
+        notifyListeners(skiPass, scanner.scan(skiPass));
     }
 
-    /** {inheritDoc} */
     @Override
     public void turnGreenLight() {
         System.out.println("THE PASSAGE ALLOWED|____________GREEN LIGHT___________|");
     }
 
-    /** {inheritDoc} */
     @Override
     public void turnRedLight() {
         System.out.println("THE PASSAGE FORBIDDEN|____________RED LIGHT___________|");
@@ -61,15 +62,13 @@ final class TurnsliteImpl implements Turnslite {
         for (SkiPassScanListener listener : listeners) {
             if (SUCCESS.equals(scanStatus)) {
                 listener.onSkiPassScanSuccess(skiPass);
+
+                continue;
             }
 
             if (FAIL.equals(scanStatus)) {
                 listener.onSkiPassScanFail(skiPass);
             }
         }
-    }
-
-    enum ScanStatus {
-        SUCCESS, FAIL
     }
 }

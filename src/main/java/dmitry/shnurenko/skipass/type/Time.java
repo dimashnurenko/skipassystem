@@ -1,11 +1,11 @@
-package dmitry.shnurenko.system;
+package dmitry.shnurenko.skipass.type;
 
 /**
  * The enum represents time in format hours:minutes
  *
  * @author Dmitry Shnurenko
  */
-enum Time {
+public enum Time {
     MORNING_FROM(9, 0), MORNING_UNTIL(13, 0), EVENING_FROM(13, 0), EVENING_UNTIL(17, 0), END_SKI_DAY(20, 0);
 
     private final int hours;
