@@ -40,6 +40,7 @@ public interface System {
      * @param until the end of period
      * @param type  ski pass type
      * @return list of ski passes
+     * @throws NullPointerException if type is null
      */
     @Nonnull List<SkiPass> findSuccessPassagesForPeriod(LocalDateTime from, LocalDateTime until, Type type);
 
@@ -50,6 +51,7 @@ public interface System {
      * @param until the end of period
      * @param type  ski pass type
      * @return list of ski passes
+     * @throws NullPointerException if type is null
      */
     @Nonnull List<SkiPass> findFailPassagesForPeriod(LocalDateTime from, LocalDateTime until, Type type);
 

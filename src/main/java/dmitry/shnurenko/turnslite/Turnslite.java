@@ -32,7 +32,7 @@ public interface Turnslite {
     /** Turns red light on turnslite. */
     void turnRedLight();
 
-    enum ScanStatus {
+    public enum ScanStatus {
         SUCCESS, FAIL;
 
         static ScanStatus of(boolean status) {

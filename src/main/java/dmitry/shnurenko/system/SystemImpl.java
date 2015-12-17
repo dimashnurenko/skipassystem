@@ -16,13 +16,14 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 import static dmitry.shnurenko.skipass.SkiPassCreator.create;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 /**
  * @author Dmitry Shnurenko
  */
 @Singleton
-final class SystemImpl implements System, SkiPassScanListener {
+public final class SystemImpl implements System, SkiPassScanListener {
 
     private final Turnslite                   turnslite;
     private final Map<LocalDateTime, SkiPass> successPassages;
@@ -66,13 +67,14 @@ final class SystemImpl implements System, SkiPassScanListener {
                                                 LocalDateTime from,
                                                 LocalDateTime until,
                                                 Type type) {
+        requireNonNull(type);
         Predicate<LocalDateTime> mapToPeriod = date -> date.isAfter(from) && date.isBefore(until);
 
         List<LocalDateTime> localDateTimes = passagesMap.keySet().stream().filter(mapToPeriod).collect(toList());
 
         return passagesMap.entrySet().stream()
                           .filter(entry -> localDateTimes.contains(entry.getKey()))
-                          .filter(entry -> entry.getValue().getType().equals(type))
+                          .filter(entry -> type.equals(entry.getValue().getType()))
                           .map(Map.Entry::getValue)
                           .collect(toList());
     }
